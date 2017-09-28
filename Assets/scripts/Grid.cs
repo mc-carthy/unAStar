@@ -1,17 +1,17 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 public class Grid : MonoBehaviour
 {
     public LayerMask obstacleLayer;
-    public Transform player;
     public Vector2 gridWorldSize;
     public float nodeRadius;
     
     private Node[,] grid;
     private float nodeDiameter;
     private int gridSizeX, gridSizeY;
+
+    public List<Node> path;
 
     private void Start()
     {
@@ -28,13 +28,15 @@ public class Grid : MonoBehaviour
 
         if (grid != null)
         {
-            Node playerNode = GetNodeFromWorldPoint(player.position);
             foreach(Node n in grid)
             {
                 Gizmos.color = (n.walkable) ? Color.white : Color.red;
-                if (playerNode == n)
+                if (path != null)
                 {
-                    Gizmos.color = Color.cyan;
+                    if (path.Contains(n))
+                    {
+                        Gizmos.color = Color.magenta;
+                    }
                 }
                 Gizmos.DrawCube(n.worldPos, Vector3.one * (nodeDiameter - 0.1f));
             }
@@ -55,6 +57,37 @@ public class Grid : MonoBehaviour
         return grid[x, y];
     }
 
+    public List<Node> GetNeighbours(Node node)
+    {
+        List<Node> neighbours = new List<Node>();
+
+        for (int x = -1; x <= 1; x++)
+        {
+            for (int y = -1; y <= 1; y++)
+            {
+                if (x == 0 && y == 0)
+                {
+                    continue;
+                }
+
+                int checkX = node.gridX + x;
+                int checkY = node.gridY + y;
+
+                if (IsWithinGrid(checkX, checkY))
+                {
+                    neighbours.Add(grid[checkX, checkY]);
+                }
+            }
+        }
+
+        return neighbours;
+    }
+
+    private bool IsWithinGrid(int x, int y)
+    {
+        return (x >= 0 && x < gridSizeX && y >= 0 && y < gridSizeY);
+    }
+
     private void CreateGrid()
     {
         grid = new Node[gridSizeX, gridSizeY];
@@ -71,7 +104,7 @@ public class Grid : MonoBehaviour
                 
                 bool walkable = !Physics.CheckSphere(worldPoint, nodeRadius, obstacleLayer);
 
-                grid[x, y] = new Node(walkable, worldPoint);
+                grid[x, y] = new Node(walkable, worldPoint, x, y);
             }
         }
     }
