@@ -5,6 +5,7 @@ using UnityEngine;
 public class Grid : MonoBehaviour
 {
     public LayerMask obstacleLayer;
+    public Transform player;
     public Vector2 gridWorldSize;
     public float nodeRadius;
     
@@ -27,12 +28,31 @@ public class Grid : MonoBehaviour
 
         if (grid != null)
         {
+            Node playerNode = GetNodeFromWorldPoint(player.position);
             foreach(Node n in grid)
             {
                 Gizmos.color = (n.walkable) ? Color.white : Color.red;
-                Gizmos.DrawWireCube(n.worldPos, Vector3.one * (nodeDiameter - 0.1f));
+                if (playerNode == n)
+                {
+                    Gizmos.color = Color.cyan;
+                }
+                Gizmos.DrawCube(n.worldPos, Vector3.one * (nodeDiameter - 0.1f));
             }
         }
+    }
+
+    public Node GetNodeFromWorldPoint(Vector3 worldPos)
+    {
+        float percentX = (worldPos.x + gridWorldSize.x / 2) / gridWorldSize.x;
+        float percentY = (worldPos.z + gridWorldSize.y / 2) / gridWorldSize.y;
+
+        percentX = Mathf.Clamp01(percentX);
+        percentY = Mathf.Clamp01(percentY);
+
+        int x = Mathf.RoundToInt((gridSizeX - 1) * percentX);
+        int y = Mathf.RoundToInt((gridSizeY - 1) * percentY);
+
+        return grid[x, y];
     }
 
     private void CreateGrid()
