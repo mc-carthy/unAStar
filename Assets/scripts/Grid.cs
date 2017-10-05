@@ -1,11 +1,16 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 
+// This script should be attached to the same game object as the Pathfinding script
+
 public class Grid : MonoBehaviour
 {
     public LayerMask obstacleLayer;
     public Vector2 gridWorldSize;
     public float nodeRadius;
+    public bool onlyDisplayPathGizmos;
+
+    public int MaxSize { get { return gridSizeX * gridSizeY; } }
     
     private Node[,] grid;
     private float nodeDiameter;
@@ -26,21 +31,37 @@ public class Grid : MonoBehaviour
     {
         Gizmos.DrawWireCube(transform.position, new Vector3(gridWorldSize.x, 1, gridWorldSize.y));
 
-        if (grid != null)
+        if (onlyDisplayPathGizmos)
         {
-            foreach(Node n in grid)
+            if (path != null)
             {
-                Gizmos.color = (n.walkable) ? Color.white : Color.red;
-                if (path != null)
+                foreach(Node n in path)
                 {
-                    if (path.Contains(n))
-                    {
-                        Gizmos.color = Color.magenta;
-                    }
+                    Gizmos.color = Color.magenta;
+                    Gizmos.DrawCube(n.worldPos, Vector3.one * (nodeDiameter - 0.1f));
                 }
-                Gizmos.DrawCube(n.worldPos, Vector3.one * (nodeDiameter - 0.1f));
             }
         }
+        else
+        {
+            if (grid != null)
+            {
+                foreach(Node n in grid)
+                {
+                    Gizmos.color = (n.walkable) ? Color.white : Color.red;
+                    if (path != null)
+                    {
+                        if (path.Contains(n))
+                        {
+                            Gizmos.color = Color.magenta;
+                        }
+                    }
+                    Gizmos.DrawCube(n.worldPos, Vector3.one * (nodeDiameter - 0.1f));
+                }
+            }
+
+        }
+
     }
 
     public Node GetNodeFromWorldPoint(Vector3 worldPos)

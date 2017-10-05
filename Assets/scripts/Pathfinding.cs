@@ -1,5 +1,9 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics;
 using UnityEngine;
+
+// This script contains the a-star algorithm that the grid class will call
+// Both need to be attached to the same game object in order to function
 
 [RequireComponent(typeof(Grid))]
 public class Pathfinding : MonoBehaviour {
@@ -15,7 +19,10 @@ public class Pathfinding : MonoBehaviour {
 
     private void Update()
     {
-        FindAStarPath(seeker.position, target.position);
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            FindAStarPath(seeker.position, target.position);
+        }
     }
 
     private void FindAStarPath(Vector3 startPos, Vector3 endPos)
@@ -28,8 +35,12 @@ public class Pathfinding : MonoBehaviour {
 
     private void FindAStarPath(Node startNode, Node endNode)
     {
+        Stopwatch sw = new Stopwatch();
+        sw.Start();
+
+
         // Unexplored nodes neighbouring to explored nodes
-        List<Node> openSet = new List<Node>();
+        Heap<Node> openSet = new Heap<Node>(grid.MaxSize);
         // Explored nodes
         HashSet<Node> closedSet = new HashSet<Node>();
 
@@ -37,24 +48,15 @@ public class Pathfinding : MonoBehaviour {
 
         while(openSet.Count > 0)
         {
-            Node currentNode = openSet[0];
-
-            for (int i = 1; i < openSet.Count; i++)
-            {
-                if (
-                    openSet[i].fCost < currentNode.fCost || 
-                    (openSet[i].fCost == currentNode.fCost && openSet[i].hCost < currentNode.hCost)
-                )
-                {
-                    currentNode = openSet[i];
-                }
-            }
-
-            openSet.Remove(currentNode);
+            Node currentNode = openSet.RemoveTop();
             closedSet.Add(currentNode);
 
             if (currentNode == endNode)
             {
+                sw.Stop();
+                print("Path found in " + sw.ElapsedMilliseconds + "ms.");
+
+
                 RetracePath(startNode, endNode);
                 return;
             }
@@ -77,6 +79,10 @@ public class Pathfinding : MonoBehaviour {
                     if (!openSet.Contains(neighbour))
                     {
                         openSet.Add(neighbour);
+                    }
+                    else
+                    {
+                        openSet.UpdateItem(neighbour);
                     }
                 }
 
